@@ -1,0 +1,14 @@
+*.pem
+*.crt
+*.key
+*.test
+*.tmp
+*.temp
+*~
+*.*~
+build/
+config*.json
+!config_empty.json
+nic-demo
+!nic-demo/
+.vscode
