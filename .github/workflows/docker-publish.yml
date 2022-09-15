@@ -76,6 +76,12 @@ jobs:
             type=ref,enable=false,event=branch
             type=ref,enable=false,event=pr
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
+          labels: |
+            org.opencontainers.image.title=NIC Demo App
+            org.opencontainers.image.description=A small demo app from NIC
+            org.opencontainers.image.vendor=Nordic Information Control
+          flavor: |
+            latest=false
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
