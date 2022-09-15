@@ -1,6 +1,6 @@
 FROM scratch
 
-COPY ./nic-demo ./
+COPY nic-demo /nic-demo
 
 EXPOSE 8080 8080
 
