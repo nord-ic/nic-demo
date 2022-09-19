@@ -5,11 +5,11 @@ import (
 	"net/http"
 )
 
-const demoVer = "1.1.10"
+const demoVer = "1.1.11"
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello world, this is a demo, version %s", demoVer)
+		fmt.Fprintf(w, "Hello world, this is a demo, version %s\n", demoVer)
 	})
 	http.ListenAndServe(":8080", nil)
 }
