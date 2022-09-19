@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-const demoVer = "1.1.15"
+const demoVer = "1.1.16"
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
