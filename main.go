@@ -7,7 +7,7 @@ import (
 
 const useTLS = false
 
-const demoVer = "2.0.1"
+const demoVer = "2.0.2"
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
