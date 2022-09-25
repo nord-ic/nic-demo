@@ -14,9 +14,9 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.3"
+const demoVer = "2.0.4"
 
-const cfgFile = "/config/config-nic-demo.json"
+const cfgFile = "./config/config-nic-demo.json"
 
 type config struct {
 	ValueA string `json:"valuea"`
