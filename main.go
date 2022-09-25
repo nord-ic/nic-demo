@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -17,34 +16,34 @@ import (
 
 const demoVer = "2.0.2"
 
-const cfgFile = "/config/config-nic-demo.yaml"
+const cfgFile = "/config/config-nic-demo.json"
 
 type config struct {
-	ValueA string `yaml:"valuea"`
-	ValueB int    `yaml:"valueb"`
+	ValueA string `json:"valuea"`
+	ValueB int    `json:"valueb"`
 }
 
 func main() {
-	log.Printf("This is nic-demo version: %s", demoVer)
+	fmt.Printf("This is nic-demo version: %s", demoVer)
 	cfg, err := loadConfig(cfgFile)
 	if err != nil {
-		log.Printf("loading config: %v", err)
+		fmt.Printf("loading config: %v", err)
 	}
 	confManager := NewMutexConfigManager(cfg)
 
 	conf := confManager.Get()
-	log.Printf("Config:\n\t%s\n\t%d\n", conf.ValueA, conf.ValueB)
+	fmt.Printf("Config:\n\t%s\n\t%d\n", conf.ValueA, conf.ValueB)
 
 	watcher, err := WatchFile(cfgFile, time.Second, func() {
 		fmt.Println("Config file updated")
 		conf, err = loadConfig(cfgFile)
 		if err != nil {
-			log.Printf("loading config: %v", err)
+			fmt.Printf("loading config: %v", err)
 			confManager.Set(conf)
 		}
 	})
 	if err != nil {
-		log.Printf("watching file: %v", err)
+		fmt.Printf("watching file: %v", err)
 	}
 
 	defer func() {
@@ -55,20 +54,20 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-sigs
-	log.Println("Application terminated ", sig)
+	fmt.Println("Application terminated ", sig)
 }
 
 func loadConfig(configFile string) (*config, error) {
 	conf := config{}
 	configData, err := os.ReadFile(configFile)
 	if err != nil {
-		log.Printf("loading config file %s: %v", configFile, err)
+		fmt.Printf("loading config file %s: %v", configFile, err)
 		return nil, err
 	}
 
 	err = yaml.Unmarshal(configData, &conf)
 	if err != nil {
-		log.Printf("unmarshaling file %s: %v", configFile, err)
+		fmt.Printf("unmarshaling file %s: %v", configFile, err)
 		return nil, err
 	}
 	return &conf, nil
