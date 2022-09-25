@@ -14,7 +14,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.4"
+const demoVer = "2.0.5"
 
 const cfgFile = "./config/config-nic-demo.json"
 
@@ -41,6 +41,8 @@ func main() {
 			fmt.Printf("loading config: %v", err)
 			confManager.Set(conf)
 		}
+		conf := confManager.Get()
+		fmt.Printf("Config (new):\n\t%s\n\t%d\n", conf.ValueA, conf.ValueB)
 	})
 	if err != nil {
 		fmt.Printf("watching file: %v", err)
