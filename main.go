@@ -14,7 +14,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.2"
+const demoVer = "2.0.3"
 
 const cfgFile = "/config/config-nic-demo.json"
 
