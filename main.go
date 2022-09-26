@@ -17,16 +17,16 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.9"
+const demoVer = "2.0.11"
 
 const (
 	cfgFile = "./config/config-nic-demo.json"
 	// srvrCert              = "./certs/srvrcert-nic-demo.pem"
 	// srvrKey               = "./certs/srvrKey-nic-demo.pem"
-	KubeTLSSecretLocation = "./certs/srvrcert-nic-demo/"
+	KubeTLSSecretLocation = "./certs/"
 	KubeCertLocation      = KubeTLSSecretLocation + "tls.crt"
 	KubeKeyLocation       = KubeTLSSecretLocation + "tls.key"
-	KubeCALocation        = "./cacert/ca.crt"
+	KubeCaCertLocation    = "./cacert/caCert.pem"
 )
 
 type config struct {
@@ -64,10 +64,10 @@ func checkFileExists(fn string) {
 	}
 }
 
-func main() {
+func main_old3() {
 	fmt.Printf("This is nic-demo version: %s\n", demoVer)
 
-	for _, fn := range []string{cfgFile, KubeCALocation, KubeCertLocation, KubeKeyLocation} {
+	for _, fn := range []string{cfgFile, KubeCaCertLocation, KubeCertLocation, KubeKeyLocation} {
 		checkFileExists(fn)
 	}
 
@@ -77,16 +77,16 @@ func main() {
 	fmt.Println("Application terminated ", sig)
 }
 
-func main_old2() {
-	fmt.Printf("This is nic-demo version: %s", demoVer)
+func main() {
+	fmt.Printf("This is nic-demo version: %s\n", demoVer)
 	cfg, err := loadJsonConfig(cfgFile)
 	if err != nil {
-		fmt.Printf("loading application config: %v", err)
+		fmt.Printf("loading application config: %v\n", err)
 		os.Exit(1)
 	}
 	tlsCfg, err := loadKubeTLS()
 	if err != nil {
-		fmt.Printf("loading TLS config: %v", err)
+		fmt.Printf("loading TLS config: %v\n", err)
 		os.Exit(1)
 	}
 	srvr := &http.Server{
@@ -97,8 +97,10 @@ func main_old2() {
 	}
 	http.HandleFunc("/", handler)
 	if cfg.UseTLS {
+		fmt.Println("staring server using TLS")
 		srvr.ListenAndServeTLS(KubeCertLocation, KubeKeyLocation)
 	} else {
+		fmt.Println("starting server without TLS")
 		http.ListenAndServe(":8080", nil)
 	}
 }
