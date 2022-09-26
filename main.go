@@ -1,7 +1,10 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -14,16 +17,100 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.5"
+const demoVer = "2.0.6"
 
-const cfgFile = "./config/config-nic-demo.json"
+const (
+	cfgFile               = "./config/config-nic-demo.json"
+	srvrCert              = "./config/srvrcert-nic-demo.pem"
+	srvrKey               = "./config/srvrKey-nic-demo.pem"
+	KubeTLSSecretLocation = "./config/srvrcert-nic-demo/"
+	KubeCertLocation      = KubeTLSSecretLocation + "tls.crt"
+	KubeKeyLocation       = KubeTLSSecretLocation + "tls.key"
+	KubeCALocation        = KubeTLSSecretLocation + "ca.crt"
+)
 
 type config struct {
-	ValueA string `json:"valuea"`
-	ValueB int    `json:"valueb"`
+	UseTLS  bool   `json:"useTls"`
+	UseMTLS bool   `json:"useMTls"`
+	ValueA  string `json:"valuea"`
+	ValueB  int    `json:"valueb"`
 }
 
 func main() {
+	fmt.Printf("This is nic-demo version: %s", demoVer)
+	cfg, err := loadJsonConfig(cfgFile)
+	if err != nil {
+		fmt.Printf("loading application config: %v", err)
+		os.Exit(1)
+	}
+	tlsCfg, err := loadKubeTLS()
+	if err != nil {
+		fmt.Printf("loading TLS config: %v", err)
+		os.Exit(1)
+	}
+	srvr := &http.Server{
+		Addr:         ":8080",
+		ReadTimeout:  time.Minute * 5,
+		WriteTimeout: time.Second * 10,
+		TLSConfig:    tlsCfg,
+	}
+	http.HandleFunc("/", handler)
+	if cfg.UseTLS {
+		srvr.ListenAndServeTLS(KubeCertLocation, KubeKeyLocation)
+	} else {
+		http.ListenAndServe(":8080", nil)
+	}
+}
+
+func loadJsonConfig(configFile string) (*config, error) {
+	conf := config{}
+	configData, err := os.ReadFile(configFile)
+	if err != nil {
+		fmt.Printf("loadJsonConfig: loading config file %s: %v", configFile, err)
+		return nil, err
+	}
+	err = yaml.Unmarshal(configData, &conf)
+	if err != nil {
+		fmt.Printf("loadJsonConfig: unmarshaling file %s: %v", configFile, err)
+		return nil, err
+	}
+	return &conf, nil
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(fmt.Sprintf("<h2>NIC Demo application, ver: %s</h2>", demoVer)))
+}
+
+func getCaCert() ([]byte, error) {
+	return os.ReadFile(KubeCertLocation)
+}
+
+// https://www.usenix.org/sites/default/files/conference/protected-files/srecon20americas_slides_hahn.pdf
+func loadKubeTLS() (*tls.Config, error) {
+	cert, err := tls.LoadX509KeyPair(KubeCertLocation, KubeKeyLocation)
+	if err != nil {
+		return nil, fmt.Errorf("NewKubeTLS: loading TLS cert and key: %w", err)
+	}
+	caCertPem, err := getCaCert()
+	if err != nil {
+		return nil, fmt.Errorf("NewKubeTLS: getting CA cert")
+	}
+	srvrPool := x509.NewCertPool()
+	if !srvrPool.AppendCertsFromPEM(caCertPem) {
+		return nil, fmt.Errorf("NewKubeTLS: failed adding CA cert to pool")
+	}
+	return &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    srvrPool,
+		RootCAs:      srvrPool,
+	}, nil
+}
+
+// =========================================================
+
+func main_old() {
 	fmt.Printf("This is nic-demo version: %s", demoVer)
 	cfg, err := loadConfig(cfgFile)
 	if err != nil {
