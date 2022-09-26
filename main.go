@@ -17,7 +17,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.8"
+const demoVer = "2.0.9"
 
 const (
 	cfgFile = "./config/config-nic-demo.json"
@@ -42,10 +42,30 @@ func checkFileExists(fn string) {
 	} else {
 		fmt.Printf("file \"%s\" DOES exist\n", fn)
 	}
+
+	files, err := os.ReadDir("./certs")
+	fmt.Printf("looking in %s:\n", "./certs")
+	if err != nil {
+		fmt.Printf("reading dir: %v\n", err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file.Name(), file.IsDir())
+	}
+
+	files, err = os.ReadDir(KubeTLSSecretLocation)
+	fmt.Printf("looking in %s:\n", KubeTLSSecretLocation)
+	if err != nil {
+		fmt.Printf("reading dir: %v\n", err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file.Name(), file.IsDir())
+	}
 }
 
 func main() {
-	fmt.Printf("This is nic-demo version: %s", demoVer)
+	fmt.Printf("This is nic-demo version: %s\n", demoVer)
 
 	for _, fn := range []string{cfgFile, KubeCALocation, KubeCertLocation, KubeKeyLocation} {
 		checkFileExists(fn)
