@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -17,7 +18,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.12"
+const demoVer = "2.0.13"
 
 const (
 	cfgFile = "./config/config-nic-demo.json"
@@ -30,8 +31,8 @@ const (
 )
 
 type config struct {
-	UseTLS  bool   `json:"useTls"`
-	UseMTLS bool   `json:"useMTls"`
+	UseTLS  bool   `json:"usetls"`
+	UseMTLS bool   `json:"usemtls"`
 	ValueA  string `json:"valuea"`
 	ValueB  int    `json:"valueb"`
 }
@@ -112,7 +113,7 @@ func loadJsonConfig(configFile string) (*config, error) {
 		fmt.Printf("loadJsonConfig: loading config file %s: %v", configFile, err)
 		return nil, err
 	}
-	err = yaml.Unmarshal(configData, &conf)
+	err = json.Unmarshal(configData, &conf)
 	if err != nil {
 		fmt.Printf("loadJsonConfig: unmarshaling file %s: %v", configFile, err)
 		return nil, err
