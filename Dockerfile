@@ -14,6 +14,8 @@ USER $USER
 WORKDIR $HOME
 
 RUN mkdir ./config
+RUN mkdir ./certs
+RUN mkdir ./cacert
 
 COPY nic-demo ./nic-demo
 

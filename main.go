@@ -17,16 +17,16 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.6"
+const demoVer = "2.0.7"
 
 const (
-	cfgFile               = "./config/config-nic-demo.json"
-	srvrCert              = "./config/srvrcert-nic-demo.pem"
-	srvrKey               = "./config/srvrKey-nic-demo.pem"
-	KubeTLSSecretLocation = "./config/srvrcert-nic-demo/"
+	cfgFile = "./config/config-nic-demo.json"
+	// srvrCert              = "./certs/srvrcert-nic-demo.pem"
+	// srvrKey               = "./certs/srvrKey-nic-demo.pem"
+	KubeTLSSecretLocation = "./certs/srvrcert-nic-demo/"
 	KubeCertLocation      = KubeTLSSecretLocation + "tls.crt"
 	KubeKeyLocation       = KubeTLSSecretLocation + "tls.key"
-	KubeCALocation        = KubeTLSSecretLocation + "ca.crt"
+	KubeCALocation        = "./cacert/ca.crt"
 )
 
 type config struct {
