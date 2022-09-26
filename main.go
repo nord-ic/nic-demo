@@ -17,7 +17,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.11"
+const demoVer = "2.0.12"
 
 const (
 	cfgFile = "./config/config-nic-demo.json"
@@ -117,6 +117,12 @@ func loadJsonConfig(configFile string) (*config, error) {
 		fmt.Printf("loadJsonConfig: unmarshaling file %s: %v", configFile, err)
 		return nil, err
 	}
+	fmt.Println("======== CONFIG 1 =======")
+	fmt.Printf("%+v\n", conf)
+	fmt.Println("=======================")
+	fmt.Println("======== CONFIG 2 =======")
+	fmt.Printf("%#v\n", conf)
+	fmt.Println("=======================")
 	return &conf, nil
 }
 
