@@ -17,7 +17,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.7"
+const demoVer = "2.0.8"
 
 const (
 	cfgFile = "./config/config-nic-demo.json"
@@ -36,7 +36,28 @@ type config struct {
 	ValueB  int    `json:"valueb"`
 }
 
+func checkFileExists(fn string) {
+	if _, err := os.Stat(fn); err != nil {
+		fmt.Printf("file \"%s\" does NOT exist: %v\n", fn, err)
+	} else {
+		fmt.Printf("file \"%s\" DOES exist\n", fn)
+	}
+}
+
 func main() {
+	fmt.Printf("This is nic-demo version: %s", demoVer)
+
+	for _, fn := range []string{cfgFile, KubeCALocation, KubeCertLocation, KubeKeyLocation} {
+		checkFileExists(fn)
+	}
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-sigs
+	fmt.Println("Application terminated ", sig)
+}
+
+func main_old2() {
 	fmt.Printf("This is nic-demo version: %s", demoVer)
 	cfg, err := loadJsonConfig(cfgFile)
 	if err != nil {
