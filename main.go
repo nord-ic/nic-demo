@@ -19,7 +19,9 @@ import (
 
 // const useTLS = false
 
-const demoVer = "3.0.3"
+const demoVer = "3.0.4"
+
+var appUser string
 
 const (
 	cfgFile = "./config/config-nic-demo.json"
@@ -46,6 +48,7 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("(Running as user %q)\n", usr)
+	appUser = usr
 
 	cfg, err := loadJsonConfig(cfgFile)
 	if err != nil {
@@ -129,7 +132,7 @@ func getCaCert() ([]byte, error) {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(fmt.Sprintf("<h2>NIC Demo application, ver: %s</h2>", demoVer)))
+	w.Write([]byte(fmt.Sprintf("<h2>NIC Demo application, ver: %s</h2><div>I'm running as user %q</div>", demoVer, appUser)))
 }
 
 func getUser() (string, error) {
