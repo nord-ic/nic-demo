@@ -17,8 +17,8 @@ RUN mkdir ./config
 RUN mkdir ./certs
 RUN mkdir ./cacert
 
-COPY ./certs/tls.* ./certs
-COPY ./config/*.json ./config
+COPY ./certs/tls.* ./certs/
+COPY ./config/*.json ./config/
 COPY nic-demo ./nic-demo
 
 EXPOSE 8080 8080

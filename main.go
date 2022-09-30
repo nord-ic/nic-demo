@@ -44,7 +44,7 @@ func main() {
 		fmt.Printf("loading application config: %v\n", err)
 		os.Exit(1)
 	}
-	tlsCfg, err := loadKubeTLS(cfg.UseTLS)
+	tlsCfg, err := loadKubeTLS(cfg.UseTLS, cfg.UseMTLS)
 	if err != nil {
 		fmt.Printf("loading TLS config: %v\n", err)
 		os.Exit(1)
@@ -57,11 +57,11 @@ func main() {
 	}
 	http.HandleFunc("/", handler)
 	if cfg.UseTLS {
-		fmt.Println("staring server using TLS")
+		fmt.Println("staring server using TLS, listening on 8080")
 		srvr.ListenAndServeTLS(KubeCertLocation, KubeKeyLocation)
 	} else {
-		fmt.Println("starting server without TLS")
-		http.ListenAndServe(":8080", nil)
+		fmt.Println("starting server without TLS, listening on 8080")
+		srvr.ListenAndServe()
 	}
 }
 
@@ -87,7 +87,7 @@ func loadJsonConfig(configFile string) (*config, error) {
 }
 
 // https://www.usenix.org/sites/default/files/conference/protected-files/srecon20americas_slides_hahn.pdf
-func loadKubeTLS(useTls bool) (*tls.Config, error) {
+func loadKubeTLS(useTls, useMtls bool) (*tls.Config, error) {
 	if !useTls {
 		return &tls.Config{}, nil
 	}
@@ -103,12 +103,16 @@ func loadKubeTLS(useTls bool) (*tls.Config, error) {
 	if !srvrPool.AppendCertsFromPEM(caCertPem) {
 		return nil, fmt.Errorf("NewKubeTLS: failed adding CA cert to pool")
 	}
-	return &tls.Config{
+	tc := tls.Config{
 		Certificates: []tls.Certificate{cert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientAuth:   tls.NoClientCert,
 		ClientCAs:    srvrPool,
 		RootCAs:      srvrPool,
-	}, nil
+	}
+	if useMtls {
+		tc.ClientAuth = tls.RequireAndVerifyClientCert
+	}
+	return &tc, nil
 }
 
 func getCaCert() ([]byte, error) {
