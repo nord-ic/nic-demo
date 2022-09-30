@@ -18,7 +18,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "2.0.13"
+const demoVer = "3.0.0"
 
 const (
 	cfgFile = "./config/config-nic-demo.json"
@@ -37,47 +37,6 @@ type config struct {
 	ValueB  int    `json:"valueb"`
 }
 
-func checkFileExists(fn string) {
-	if _, err := os.Stat(fn); err != nil {
-		fmt.Printf("file \"%s\" does NOT exist: %v\n", fn, err)
-	} else {
-		fmt.Printf("file \"%s\" DOES exist\n", fn)
-	}
-
-	files, err := os.ReadDir("./certs")
-	fmt.Printf("looking in %s:\n", "./certs")
-	if err != nil {
-		fmt.Printf("reading dir: %v\n", err)
-	}
-
-	for _, file := range files {
-		fmt.Println(file.Name(), file.IsDir())
-	}
-
-	files, err = os.ReadDir(KubeTLSSecretLocation)
-	fmt.Printf("looking in %s:\n", KubeTLSSecretLocation)
-	if err != nil {
-		fmt.Printf("reading dir: %v\n", err)
-	}
-
-	for _, file := range files {
-		fmt.Println(file.Name(), file.IsDir())
-	}
-}
-
-func main_old3() {
-	fmt.Printf("This is nic-demo version: %s\n", demoVer)
-
-	for _, fn := range []string{cfgFile, KubeCaCertLocation, KubeCertLocation, KubeKeyLocation} {
-		checkFileExists(fn)
-	}
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-sigs
-	fmt.Println("Application terminated ", sig)
-}
-
 func main() {
 	fmt.Printf("This is nic-demo version: %s\n", demoVer)
 	cfg, err := loadJsonConfig(cfgFile)
@@ -85,7 +44,7 @@ func main() {
 		fmt.Printf("loading application config: %v\n", err)
 		os.Exit(1)
 	}
-	tlsCfg, err := loadKubeTLS()
+	tlsCfg, err := loadKubeTLS(cfg.UseTLS)
 	if err != nil {
 		fmt.Printf("loading TLS config: %v\n", err)
 		os.Exit(1)
@@ -127,17 +86,11 @@ func loadJsonConfig(configFile string) (*config, error) {
 	return &conf, nil
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(fmt.Sprintf("<h2>NIC Demo application, ver: %s</h2>", demoVer)))
-}
-
-func getCaCert() ([]byte, error) {
-	return os.ReadFile(KubeCertLocation)
-}
-
 // https://www.usenix.org/sites/default/files/conference/protected-files/srecon20americas_slides_hahn.pdf
-func loadKubeTLS() (*tls.Config, error) {
+func loadKubeTLS(useTls bool) (*tls.Config, error) {
+	if !useTls {
+		return &tls.Config{}, nil
+	}
 	cert, err := tls.LoadX509KeyPair(KubeCertLocation, KubeKeyLocation)
 	if err != nil {
 		return nil, fmt.Errorf("NewKubeTLS: loading TLS cert and key: %w", err)
@@ -158,7 +111,57 @@ func loadKubeTLS() (*tls.Config, error) {
 	}, nil
 }
 
+func getCaCert() ([]byte, error) {
+	return os.ReadFile(KubeCertLocation)
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(fmt.Sprintf("<h2>NIC Demo application, ver: %s</h2>", demoVer)))
+}
+
 // =========================================================
+
+func checkFileExists(fn string) {
+	if _, err := os.Stat(fn); err != nil {
+		fmt.Printf("file \"%s\" does NOT exist: %v\n", fn, err)
+	} else {
+		fmt.Printf("file \"%s\" DOES exist\n", fn)
+	}
+
+	files, err := os.ReadDir("./certs")
+	fmt.Printf("looking in %s:\n", "./certs")
+	if err != nil {
+		fmt.Printf("reading dir: %v\n", err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file.Name(), file.IsDir())
+	}
+
+	files, err = os.ReadDir(KubeTLSSecretLocation)
+	fmt.Printf("looking in %s:\n", KubeTLSSecretLocation)
+	if err != nil {
+		fmt.Printf("reading dir: %v\n", err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file.Name(), file.IsDir())
+	}
+}
+
+func main_old3() {
+	fmt.Printf("This is nic-demo version: %s\n", demoVer)
+
+	for _, fn := range []string{cfgFile, KubeCaCertLocation, KubeCertLocation, KubeKeyLocation} {
+		checkFileExists(fn)
+	}
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-sigs
+	fmt.Println("Application terminated ", sig)
+}
 
 func main_old() {
 	fmt.Printf("This is nic-demo version: %s", demoVer)
