@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"os/user"
 	"sync"
 	"syscall"
 	"time"
@@ -18,7 +19,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "3.0.0"
+const demoVer = "3.0.3"
 
 const (
 	cfgFile = "./config/config-nic-demo.json"
@@ -39,6 +40,13 @@ type config struct {
 
 func main() {
 	fmt.Printf("This is nic-demo version: %s\n", demoVer)
+	usr, err := getUser()
+	if err != nil {
+		fmt.Printf("determining user: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("(Running as user %q)\n", usr)
+
 	cfg, err := loadJsonConfig(cfgFile)
 	if err != nil {
 		fmt.Printf("loading application config: %v\n", err)
@@ -122,6 +130,14 @@ func getCaCert() ([]byte, error) {
 func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(fmt.Sprintf("<h2>NIC Demo application, ver: %s</h2>", demoVer)))
+}
+
+func getUser() (string, error) {
+	currentUser, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	return currentUser.Username, nil
 }
 
 // =========================================================

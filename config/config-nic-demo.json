@@ -1,0 +1,6 @@
+{
+	"usetls": false,
+	"usemtls": false,
+	"valuea": "This is value A",
+	"valueb": 48
+}

@@ -1,26 +1,33 @@
 # FROM scratch
-FROM alpine
+FROM ubuntu:latest AS runner
 
-ARG USER=default
-ENV HOME=/home/$USER
+ARG USER=nic
+ARG app=nic-demo
 
-RUN apk add --update sudo
+USER root
+RUN useradd -u 1400 $USER
+RUN mkdir /config
+RUN mkdir /certs
+#RUN mkdir /cacert
+COPY ./config/config-${app}.json /config/config-${app}.json
+COPY ./certs/*.* /certs/
+# RUN chown $USER: ${app} 
+RUN chown -R $USER: /config /certs
 
-RUN adduser -D $USER \
-    && echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER \
-    && chmod 0440 /etc/sudoers.d/$USER
+FROM scratch
 
-USER $USER
-WORKDIR $HOME
+ARG USER=nic
+ARG app=nic-demo
 
-RUN mkdir ./config
-RUN mkdir ./certs
-RUN mkdir ./cacert
+COPY --from=runner /etc/passwd /etc/passwd
+COPY --from=runner /etc/group /etc/group
 
-COPY ./config/*.json ./config/
-COPY ./certs/tls.* ./certs/
-COPY nic-demo ./nic-demo
+COPY --from=runner --chown=$USER /config ./config
+COPY --from=runner --chown=$USER /certs ./certs
+COPY $app ./$app
+#COPY --from=runner --chown=$USER $app ./$app
 
 EXPOSE 8080 8080
 
+USER $USER
 CMD [ "./nic-demo" ]
