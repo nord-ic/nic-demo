@@ -19,7 +19,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "3.0.4"
+const demoVer = "3.0.5"
 
 var appUser string
 
