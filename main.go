@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,9 +20,13 @@ import (
 
 // const useTLS = false
 
-const demoVer = "3.0.7"
+const demoVer = "3.1.0"
 
-var appUser string
+var (
+	appUser string
+	allDone bool
+	hostIps map[string][]string
+)
 
 const (
 	cfgFile = "./config/config-nic-demo.json"
@@ -34,10 +39,11 @@ const (
 )
 
 type config struct {
-	UseTLS  bool   `json:"usetls"`
-	UseMTLS bool   `json:"usemtls"`
-	ValueA  string `json:"valuea"`
-	ValueB  int    `json:"valueb"`
+	UseTLS    bool     `json:"usetls"`
+	UseMTLS   bool     `json:"usemtls"`
+	ValueA    string   `json:"valuea"`
+	ValueB    int      `json:"valueb"`
+	HostNames []string `json:"hostNames"`
 }
 
 func main() {
@@ -60,6 +66,8 @@ func main() {
 		fmt.Printf("loading TLS config: %v\n", err)
 		os.Exit(1)
 	}
+	hostIps = make(map[string][]string)
+	go lookupAll(cfg.HostNames)
 	srvr := &http.Server{
 		Addr:         ":8080",
 		ReadTimeout:  time.Minute * 5,
@@ -133,6 +141,13 @@ func getCaCert() ([]byte, error) {
 func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(fmt.Sprintf("<h2>NIC Demo application, ver: %s</h2><div>I'm running as user %q</div>", demoVer, appUser)))
+	if !allDone {
+		w.Write([]byte(fmt.Sprintf("<p>I'm still doing lookup, please reload...</p>")))
+		return
+	}
+	for hn, ips := range hostIps {
+		w.Write([]byte(fmt.Sprintf("<b>%s</b>: %v", hn, ips)))
+	}
 }
 
 func getUser() (string, error) {
@@ -141,6 +156,30 @@ func getUser() (string, error) {
 		return "", err
 	}
 	return currentUser.Username, nil
+}
+
+func lookupAll(names []string) {
+	for _, nm := range names {
+		ips, err := lookupHostName(nm)
+		if err != nil {
+			hostIps[nm] = []string{err.Error()}
+			continue
+		}
+		hostIps[nm] = ips
+	}
+	allDone = true
+}
+
+func lookupHostName(name string) ([]string, error) {
+	var res []string
+	ips, err := net.LookupIP(name)
+	if err != nil {
+		return res, err
+	}
+	for _, ip := range ips {
+		res = append(res, ip.String())
+	}
+	return res, nil
 }
 
 // =========================================================
