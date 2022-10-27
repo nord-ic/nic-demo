@@ -20,7 +20,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "3.1.0"
+const demoVer = "3.1.1"
 
 var (
 	appUser string
@@ -142,11 +142,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(fmt.Sprintf("<h2>NIC Demo application, ver: %s</h2><div>I'm running as user %q</div>", demoVer, appUser)))
 	if !allDone {
-		w.Write([]byte(fmt.Sprintf("<p>I'm still doing lookup, please reload...</p>")))
+		w.Write([]byte("<p>I'm still doing lookup, please reload...</p>"))
 		return
 	}
 	for hn, ips := range hostIps {
-		w.Write([]byte(fmt.Sprintf("<b>%s</b>: %v", hn, ips)))
+		w.Write([]byte(fmt.Sprintf("<b>%s</b>: %v<br>\n", hn, ips)))
 	}
 }
 
