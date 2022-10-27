@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"os/user"
+	"sort"
 	"sync"
 	"syscall"
 	"time"
@@ -145,8 +146,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("<p>I'm still doing lookup, please reload...</p>"))
 		return
 	}
-	for hn, ips := range hostIps {
-		w.Write([]byte(fmt.Sprintf("<b>%s</b>: %v<br>\n", hn, ips)))
+	keys := make([]string, len(hostIps))
+	i := 0
+	for k := range hostIps {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+	for _, hn := range keys {
+		w.Write([]byte(fmt.Sprintf("<b>%s</b>: %v<br>\n", hn, hostIps[hn])))
 	}
 }
 
