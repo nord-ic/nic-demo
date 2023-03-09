@@ -24,7 +24,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "3.1.2"
+const demoVer = "3.1.4"
 
 var (
 	appUser   string
@@ -193,14 +193,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		i++
 	}
 
-	dbOk := "Database connected OK"
 	if !testDb(*globalCfg) {
-		dbOk = "Database connection FAILED"
+		w.Write([]byte(fmt.Sprintf("<br>%s<br>", "Database connection FAILED")))
+	} else {
+		w.Write([]byte(fmt.Sprintf("<br>%s<br>", "Database connection OK")))
 	}
 
 	sort.Strings(keys)
 	for _, hn := range keys {
-		w.Write([]byte(fmt.Sprintf("<b>%s</b>: %v<br>%s\n", hn, hostIps[hn], dbOk)))
+		w.Write([]byte(fmt.Sprintf("<b>%s</b>: %v<br>\n", hn, hostIps[hn])))
 	}
 
 }
