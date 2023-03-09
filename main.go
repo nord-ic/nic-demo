@@ -24,7 +24,7 @@ import (
 
 // const useTLS = false
 
-const demoVer = "3.1.4"
+const demoVer = "3.1.5"
 
 var (
 	appUser   string
@@ -100,7 +100,8 @@ func main() {
 	}
 }
 
-func testDb(cfg config) bool {
+func testDb(cfg config) (bool, string) {
+	fmt.Println("in testDb")
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.DbHost,
 		cfg.DbPort,
@@ -112,17 +113,17 @@ func testDb(cfg config) bool {
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		fmt.Printf("loading driver: %v", err)
-		return false
+		fmt.Printf("loading driver: %v\n", err)
+		return false, err.Error()
 	}
 
 	err = db.Ping()
 	if err != nil {
-		fmt.Printf("pinging database: %v", err)
-		return false
+		fmt.Printf("pinging database: %v\n", err)
+		return false, err.Error()
 	}
 	fmt.Println("database connected")
-	return true
+	return true, "OK"
 }
 
 func loadJsonConfig(configFile string) (*config, error) {
@@ -193,7 +194,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		i++
 	}
 
-	if !testDb(*globalCfg) {
+	dbok, dbmsg := testDb(*globalCfg)
+	fmt.Printf("from DB: %s\n", dbmsg)
+	if !dbok {
 		w.Write([]byte(fmt.Sprintf("<br>%s<br>", "Database connection FAILED")))
 	} else {
 		w.Write([]byte(fmt.Sprintf("<br>%s<br>", "Database connection OK")))
