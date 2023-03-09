@@ -195,7 +195,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dbok, dbmsg := testDb(*globalCfg)
-	fmt.Printf("from DB: %s\n", dbmsg)
+	fmt.Printf("msg from DB: %s\n", dbmsg)
 	if !dbok {
 		w.Write([]byte(fmt.Sprintf("<br>%s<br>", "Database connection FAILED")))
 	} else {
