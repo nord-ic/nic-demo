@@ -2,5 +2,10 @@
 	"usetls": false,
 	"usemtls": false,
 	"valuea": "This is value A",
+	"dbhost": "host.minikube.internal",
+	"dbport": 5432,
+	"dbusr": "NicPgUser",
+	"dbpw": "nicpgpass",
+	"dbname": "AuthzDb",
 	"valueb": 48
 }

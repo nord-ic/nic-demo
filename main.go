@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -15,6 +16,8 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/lib/pq"
+
 	"gopkg.in/fsnotify.v1"
 	"gopkg.in/yaml.v3"
 )
@@ -24,9 +27,10 @@ import (
 const demoVer = "3.1.2"
 
 var (
-	appUser string
-	allDone bool
-	hostIps map[string][]string
+	appUser   string
+	allDone   bool
+	hostIps   map[string][]string
+	globalCfg *config
 )
 
 const (
@@ -45,10 +49,16 @@ type config struct {
 	ValueA    string   `json:"valuea"`
 	ValueB    int      `json:"valueb"`
 	HostNames []string `json:"hostNames"`
+	DbHost    string   `json:"dbhost"`
+	DbPort    int      `json:"dbport"`
+	DbUser    string   `json:"dbusr"`
+	DbPass    string   `json:"dbpw"`
+	DbName    string   `json:"dbname"`
 }
 
 func main() {
 	fmt.Printf("This is nic-demo version: %s\n", demoVer)
+
 	usr, err := getUser()
 	if err != nil {
 		fmt.Printf("determining user: %v\n", err)
@@ -62,13 +72,17 @@ func main() {
 		fmt.Printf("loading application config: %v\n", err)
 		os.Exit(1)
 	}
+	globalCfg = cfg
+
 	tlsCfg, err := loadKubeTLS(cfg.UseTLS, cfg.UseMTLS)
 	if err != nil {
 		fmt.Printf("loading TLS config: %v\n", err)
 		os.Exit(1)
 	}
+
 	hostIps = make(map[string][]string)
 	go lookupAll(cfg.HostNames)
+
 	srvr := &http.Server{
 		Addr:         ":8080",
 		ReadTimeout:  time.Minute * 5,
@@ -76,6 +90,7 @@ func main() {
 		TLSConfig:    tlsCfg,
 	}
 	http.HandleFunc("/", handler)
+
 	if cfg.UseTLS {
 		fmt.Println("staring server using TLS, listening on 8080")
 		srvr.ListenAndServeTLS(KubeCertLocation, KubeKeyLocation)
@@ -83,6 +98,31 @@ func main() {
 		fmt.Println("starting server without TLS, listening on 8080")
 		srvr.ListenAndServe()
 	}
+}
+
+func testDb(cfg config) bool {
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		cfg.DbHost,
+		cfg.DbPort,
+		cfg.DbUser,
+		cfg.DbPass,
+		cfg.DbName,
+		"disable",
+	)
+
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		fmt.Printf("loading driver: %v", err)
+		return false
+	}
+
+	err = db.Ping()
+	if err != nil {
+		fmt.Printf("pinging database: %v", err)
+		return false
+	}
+	fmt.Println("database connected")
+	return true
 }
 
 func loadJsonConfig(configFile string) (*config, error) {
@@ -152,10 +192,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		keys[i] = k
 		i++
 	}
+
+	dbOk := "Database connected OK"
+	if !testDb(*globalCfg) {
+		dbOk = "Database connection FAILED"
+	}
+
 	sort.Strings(keys)
 	for _, hn := range keys {
-		w.Write([]byte(fmt.Sprintf("<b>%s</b>: %v<br>\n", hn, hostIps[hn])))
+		w.Write([]byte(fmt.Sprintf("<b>%s</b>: %v<br>%s\n", hn, hostIps[hn], dbOk)))
 	}
+
 }
 
 func getUser() (string, error) {
