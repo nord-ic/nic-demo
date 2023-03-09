@@ -6,6 +6,6 @@
 	"dbport": 5432,
 	"dbusr": "NicPgUser",
 	"dbpw": "nicpgpass",
-	"dbname": "AuthzDb",
+	"dbname": "AuthzDB",
 	"valueb": 48
 }
